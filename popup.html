@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AntiTube</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0d0d0d;
+      --surface: #181818;
+      --border:  #272727;
+      --red:     #ff2d2d;
+      --green:   #22c55e;
+      --text:    #f0f0f0;
+      --muted:   #666;
+      --mono:    'Space Mono', monospace;
+      --display: 'Syne', sans-serif;
+    }
+
+    body {
+      width: 280px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      padding: 20px;
+      user-select: none;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 18px;
+    }
+    .logo {
+      width: 32px; height: 32px; background: var(--red);
+      border-radius: 8px; display: grid; place-items: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .brand { font-family: var(--display); font-size: 1.25rem; font-weight: 800; letter-spacing: -.5px; }
+    .brand span { color: var(--red); }
+
+    /* ── Status badge ── */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 50px;
+      font-size: .7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 18px;
+    }
+    .status-badge.active  { background: #0d2b1a; color: var(--green); border: 1px solid #1a4a2e; }
+    .status-badge.blocked { background: #2b0d0d; color: var(--red);   border: 1px solid #4a1a1a; }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Timer meter ── */
+    .meter-row { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+    .meter-label {
+      display: flex; justify-content: space-between;
+      font-size: .7rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+    .meter-label .val { color: var(--text); font-weight: 700; }
+    .bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .bar-fill {
+      height: 100%; border-radius: 3px; background: var(--green);
+      transition: width .4s cubic-bezier(.4,0,.2,1), background .4s;
+      min-width: 0;
+    }
+    .bar-fill.danger { background: var(--red); }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* ── Duration picker ── */
+    .picker-label {
+      font-size: .7rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .07em;
+      margin-bottom: 10px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .picker-label .dur-display {
+      color: var(--text); font-weight: 700;
+      font-size: .85rem;
+    }
+
+    /* Slider */
+    .slider-wrap { position: relative; padding: 4px 0; margin-bottom: 6px; }
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      background: var(--border); border-radius: 2px;
+      outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 2px solid #0d0d0d;
+      box-shadow: 0 0 0 1px var(--red);
+      transition: transform .15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* Tick marks */
+    .ticks {
+      display: flex; justify-content: space-between;
+      padding: 0 1px; margin-top: 4px;
+    }
+    .tick {
+      font-size: .6rem; color: var(--muted);
+      text-align: center; flex: 1;
+    }
+    .tick:first-child { text-align: left; }
+    .tick:last-child  { text-align: right; }
+
+    /* Disabled state when timer is running */
+    .picker-section.running input[type=range] { pointer-events: none; opacity: .4; }
+    .picker-section.running .picker-hint { display: block; }
+    .picker-hint {
+      display: none;
+      font-size: .62rem; color: var(--muted);
+      margin-top: 6px; font-style: italic;
+    }
+
+    /* ── Buttons row ── */
+    .btn-row { display: flex; gap: 8px; margin-top: 16px; }
+    .btn {
+      flex: 1; padding: 9px 0;
+      border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--muted);
+      font-family: var(--mono); font-size: .72rem;
+      cursor: pointer; text-transform: uppercase; letter-spacing: .07em;
+      transition: all .2s;
+    }
+    .btn:hover { border-color: var(--red); color: var(--red); background: #1a0d0d; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">🚫</div>
+    <div class="brand">Anti<span>Tube</span></div>
+  </div>
+
+  <div class="status-badge active" id="statusBadge">
+    <span class="dot"></span>
+    <span id="statusText">Idle</span>
+  </div>
+
+  <!-- Timer progress bar -->
+  <div class="meter-row">
+    <div class="meter-label">
+      <span>Time elapsed</span>
+      <span class="val" id="timerVal">0:00 / —</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="timerBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- Duration picker -->
+  <div class="picker-section" id="pickerSection">
+    <div class="picker-label">
+      <span>Limit duration</span>
+      <span class="dur-display" id="durDisplay">7 min</span>
+    </div>
+    <div class="slider-wrap">
+      <input type="range" id="durationSlider" min="1" max="15" value="7" step="1" />
+    </div>
+    <div class="ticks">
+      <span class="tick">1m</span>
+      <span class="tick">5m</span>
+      <span class="tick">10m</span>
+      <span class="tick">15m</span>
+    </div>
+    <div class="picker-hint">Reset to change duration</div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="btn-row">
+    <button class="btn" id="resetBtn">↺ Reset</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
