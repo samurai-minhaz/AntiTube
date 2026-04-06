@@ -5,7 +5,7 @@ It automatically hides YouTube Shorts after a custom limit (1 to 15 minutes)
 to help you break the infinite scroll habit.
 
 ## How to Install
-1. Download this repository as a ZIP and extract it.
+1. Download this repository as a ZIP or download AntiTube.zip from this repository and extract it.
 2. Go to `chrome://extensions/` in your browser.
 3. Enable **Developer mode**.
 4. Click **Load unpacked** and select the extension folder.
